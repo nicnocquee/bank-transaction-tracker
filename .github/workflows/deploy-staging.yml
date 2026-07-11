@@ -24,8 +24,8 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        # Skip DB-backed suites in CI; run those locally / against staging separately.
-        run: npx vitest run --exclude 'src/lib/api/functional-api.test.ts' --exclude 'src/lib/api/route-handlers.test.ts'
+        # Full suite (incl. DB) runs on PRs via ci.yml; deploy keeps a fast unit smoke check.
+        run: npm run test:unit
 
       - name: Deploy to Netlify (staging)
         env:
