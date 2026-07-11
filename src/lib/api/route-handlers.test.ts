@@ -190,6 +190,8 @@ describe("API route handlers", () => {
       created: 1,
       skipped: 0,
       errors: [],
+      mailbox: "INBOX",
+      truncated: false,
     });
 
     // Act
@@ -202,6 +204,41 @@ describe("API route handlers", () => {
     expect(tested.status).toBe(200);
     expect(synced.status).toBe(200);
     expect(syncMock).toHaveBeenCalledOnce();
+
+    await prisma.user.delete({ where: { id: user.id } });
+  });
+
+  it("returns a 500 with the IMAP error message when sync throws", async () => {
+    // Setup
+    const email = `sync-fail-${Date.now()}@example.com`;
+    const register = await registerPost(
+      jsonRequest("http://localhost/api/register", {
+        email,
+        password: "password123",
+      }),
+    );
+    const { user } = (await register.json()) as {
+      user: { id: string; email: string };
+    };
+    authMock.mockResolvedValue({ user: { id: user.id, email } });
+    await imapPost(
+      jsonRequest("http://localhost/api/imap", {
+        host: "imap.example.com",
+        port: 993,
+        username: email,
+        password: "secret",
+        tls: true,
+      }),
+    );
+    syncMock.mockRejectedValue(new Error("Connection timed out"));
+
+    // Act
+    const synced = await syncPost();
+    const body = (await synced.json()) as { error?: string };
+
+    // Assert
+    expect(synced.status).toBe(500);
+    expect(body.error).toBe("Connection timed out");
 
     await prisma.user.delete({ where: { id: user.id } });
   });

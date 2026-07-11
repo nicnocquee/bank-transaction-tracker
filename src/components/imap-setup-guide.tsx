@@ -18,12 +18,12 @@ export function ImapSetupGuide() {
 
       <div className="space-y-5 border-t border-line px-4 py-4 text-ink-muted">
         <p>
-          Connect the inbox that receives bank receipt emails. Currently we
+          Connect the mailbox that receives bank receipt emails. Currently we
           import Bank Sinarmas mail from{" "}
           <span className="font-mono text-xs text-foreground">
             qris-transaction@banksinarmas.com
           </span>
-          .
+          , including archived mail (not only the inbox).
         </p>
 
         <div>
