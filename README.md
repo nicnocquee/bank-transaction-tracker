@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sinarmas Expense Tracker
 
-## Getting Started
+Multi-user app that imports Bank Sinarmas QRIS/transfer receipts from email (`qris-transaction@banksinarmas.com`) over IMAP and shows monthly expenses.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) + TypeScript + Tailwind
+- PostgreSQL + Prisma
+- Auth.js (email/password)
+- IMAP via `imapflow`
+- Vitest + Playwright
+
+## Quick start
 
 ```bash
+cp .env.example .env
+# set AUTH_SECRET and IMAP_SECRET_KEY (openssl rand -base64 32 / openssl rand -hex 32)
+
+npm install
+npm run db:up
+npx prisma migrate dev
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000), register, connect IMAP (e.g. Gmail app password), then **Sync now**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script                  | Purpose                                       |
+| ----------------------- | --------------------------------------------- |
+| `npm run test`          | Unit + functional tests                       |
+| `npm run test:coverage` | Coverage (100% on parser/crypto/sync helpers) |
+| `npm run test:e2e`      | Playwright browser flow                       |
+| `npm run db:up`         | Start Postgres via Docker Compose             |
 
-## Learn More
+## Security notes
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- IMAP passwords are encrypted with AES-256-GCM (`IMAP_SECRET_KEY`) before storage.
+- All transaction/IMAP queries are scoped to `session.user.id`.
+- Set `ALLOW_FIXTURE_SYNC=0` in production (sample-email inject endpoint).

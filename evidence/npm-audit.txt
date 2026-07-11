@@ -1,0 +1,49 @@
+# npm audit report
+
+@hono/node-server  <1.19.13
+Severity: moderate
+@hono/node-server: Middleware bypass via repeated slashes in serveStatic - https://github.com/advisories/GHSA-92pp-h63x-v22m
+fix available via `npm audit fix --force`
+Will install prisma@6.19.3, which is a breaking change
+node_modules/@hono/node-server
+  @prisma/dev  <=0.24.8
+  Depends on vulnerable versions of @hono/node-server
+  node_modules/@prisma/dev
+    prisma  6.20.0-dev.1 - 7.9.0-dev.7
+    Depends on vulnerable versions of @prisma/dev
+    node_modules/prisma
+
+nodemailer  <=9.0.0
+Severity: high
+Nodemailer has SMTP command injection due to unsanitized `envelope.size` parameter - https://github.com/advisories/GHSA-c7w3-x93f-qmm8
+Nodemailer Vulnerable to SMTP Command Injection via CRLF in Transport name Option (EHLO/HELO)  - https://github.com/advisories/GHSA-vvjj-xcjg-gr5g
+Nodemailer: CRLF injection in Nodemailer List-* header comments allows arbitrary message header injection - https://github.com/advisories/GHSA-268h-hp4c-crq3
+Nodemailer jsonTransport bypasses disableFileAccess and disableUrlAccess during message normalization - https://github.com/advisories/GHSA-wqvq-jvpq-h66f
+Nodemailer: Improper TLS Certificate Validation in OAuth2 Token Fetch Enables Credential Interception - https://github.com/advisories/GHSA-r7g4-qg5f-qqm2
+Nodemailer: Message-level raw option bypasses disableFileAccess/disableUrlAccess, enabling arbitrary file read and full-response SSRF in the delivered message - https://github.com/advisories/GHSA-p6gq-j5cr-w38f
+fix available via `npm audit fix --force`
+Will install next-auth@1.12.1, which is a breaking change
+node_modules/nodemailer
+  @auth/core  *
+  Depends on vulnerable versions of nodemailer
+  node_modules/@auth/core
+    next-auth  <=0.0.0-semantically-released || 1.1.0 - 1.5.0 || >=2.0.0-beta.0
+    Depends on vulnerable versions of @auth/core
+    Depends on vulnerable versions of next
+    Depends on vulnerable versions of nodemailer
+    node_modules/next-auth
+
+postcss  <8.5.10
+Severity: moderate
+PostCSS has XSS via Unescaped </style> in its CSS Stringify Output - https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+fix available via `npm audit fix --force`
+Will install next@9.3.3, which is a breaking change
+node_modules/next/node_modules/postcss
+  next  9.3.4-canary.0 - 16.3.0-canary.5
+  Depends on vulnerable versions of postcss
+  node_modules/next
+
+8 vulnerabilities (7 moderate, 1 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

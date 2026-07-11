@@ -1,0 +1,10 @@
+◇ injected env (6) from .env // tip: ⌘ override existing { override: true }
+
+ RUN  v4.1.10 /Users/nico/Projects/personal/bank-transaction-tracker
+
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  11:58:35
+   Duration  1.43s (transform 126ms, setup 0ms, import 322ms, tests 1.33s, environment 0ms)
+

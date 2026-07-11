@@ -1,0 +1,27 @@
+
+> bank-transaction-tracker@0.1.0 test:coverage
+> vitest run --coverage
+
+◇ injected env (6) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+ RUN  v4.1.10 /Users/nico/Projects/personal/bank-transaction-tracker
+      Coverage enabled with v8
+
+
+ Test Files  8 passed (8)
+      Tests  55 passed (55)
+   Start at  11:58:33
+   Duration  1.54s (transform 387ms, setup 0ms, import 811ms, tests 1.41s, environment 0ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 129/129 )
+Branches     : 100% ( 87/87 )
+Functions    : 100% ( 17/17 )
+Lines        : 100% ( 129/129 )
+================================================================================
