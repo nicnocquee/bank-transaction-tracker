@@ -7,17 +7,21 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run --exclude 'src/lib/api/functional-api.test.ts' --exclude 'src/lib/api/route-handlers.test.ts'",
     "test:e2e": "playwright test",
     "test:api": "vitest run src/lib/api",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
     "postinstall": "prisma generate",
-    "cron:worker": "tsx scripts/cron-worker.ts"
+    "cron:worker": "tsx scripts/cron-worker.ts",
+    "ci:audit": "npm audit --audit-level=high"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
@@ -52,5 +56,8 @@
     "tsx": "^4.23.0",
     "typescript": "^5",
     "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "nodemailer": "^9.0.3"
   }
 }
