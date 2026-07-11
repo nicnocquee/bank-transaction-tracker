@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatIdr, formatTransactionDate } from "@/lib/format/money";
 import { fromMonthValue, toMonthValue } from "@/lib/format/period";
@@ -155,7 +156,14 @@ export function ExpenseDashboard({
 
       {!hasImap && process.env.NEXT_PUBLIC_ALLOW_FIXTURE_SYNC !== "1" ? (
         <p className="rounded-lg border border-line bg-panel p-4 text-sm text-ink-muted">
-          Connect your mailbox under IMAP settings to import bank receipts.
+          Connect your mailbox under{" "}
+          <Link
+            href="/settings/imap"
+            className="text-accent underline underline-offset-2"
+          >
+            IMAP settings
+          </Link>{" "}
+          to import bank receipts.
         </p>
       ) : null}
 
