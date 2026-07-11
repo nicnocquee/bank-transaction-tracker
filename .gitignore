@@ -45,8 +45,9 @@ yarn-error.log*
 /evidence/*.png
 !/evidence/.gitkeep
 
-# vercel
+# vercel / netlify
 .vercel
+.netlify
 
 # typescript
 *.tsbuildinfo

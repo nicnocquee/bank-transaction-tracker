@@ -1,0 +1,6 @@
+# Netlify build for Next.js (OpenNext adapter applied automatically).
+[build]
+  command = "npx prisma migrate deploy && npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"

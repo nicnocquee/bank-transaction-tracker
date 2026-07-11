@@ -1,0 +1,44 @@
+name: Cron IMAP sync
+
+on:
+  schedule:
+    # Every 5 minutes
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which environment to sync"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - production
+          - staging
+
+jobs:
+  sync-production:
+    if: github.event_name == 'schedule' || inputs.target == 'both' || inputs.target == 'production'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger production IMAP sync
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: https://bank-transaction-tracker.netlify.app
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/cron/sync"
+
+  sync-staging:
+    if: github.event_name == 'schedule' || inputs.target == 'both' || inputs.target == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger staging IMAP sync
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: https://bank-transaction-tracker-staging.netlify.app
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/cron/sync"

@@ -7,10 +7,20 @@ Multi-user app that imports bank payment receipts from email over IMAP and shows
 ## Stack
 
 - Next.js (App Router) + TypeScript + Tailwind
-- PostgreSQL + Prisma
+- PostgreSQL (local Docker or Supabase) + Prisma
 - Auth.js (email/password)
 - IMAP via `imapflow`
 - Vitest + Playwright
+- Netlify (production + staging) with GitHub continuous deploy
+
+## Environments
+
+| Environment | Branch   | App URL | Database |
+| ----------- | -------- | ------- | -------- |
+| Production  | `main`   | https://bank-transaction-tracker.netlify.app | Supabase `bank-tracker-prod` |
+| Staging     | `staging`| https://bank-transaction-tracker-staging.netlify.app | Supabase `bank-tracker-staging` |
+
+Push to `main` or `staging` to deploy via GitHub Actions → Netlify. Prisma migrations run during the Netlify build (`prisma migrate deploy`). IMAP sync runs every 5 minutes via GitHub Actions against `/api/cron/sync`.
 
 ## Quick start
 
