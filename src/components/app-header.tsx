@@ -11,7 +11,7 @@ export async function AppHeader() {
     <header className="border-b border-line bg-panel/80 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
         <Link href="/" className="text-lg font-semibold tracking-tight">
-          Sinarmas Tracker
+          Bank Transaction Tracker
         </Link>
         <nav className="flex items-center gap-4 text-sm text-ink-muted">
           <Link href="/" className="hover:text-foreground">

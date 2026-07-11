@@ -105,9 +105,9 @@ export function ImapSettingsForm() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {connection ? (
-        <div className="rounded-lg border border-line bg-panel p-4 text-sm">
+        <div className="rounded-lg border border-line bg-panel px-4 py-3 text-sm">
           <p>
             Connected as{" "}
             <span className="font-mono">{connection.username}</span> @{" "}
@@ -124,7 +124,7 @@ export function ImapSettingsForm() {
               type="button"
               disabled={pending}
               onClick={() => void onTest()}
-              className="rounded-md border border-line px-3 py-1.5 hover:bg-background"
+              className="rounded-md border border-line px-3 py-1.5 transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-background"
             >
               Test connection
             </button>
@@ -132,19 +132,13 @@ export function ImapSettingsForm() {
               type="button"
               disabled={pending}
               onClick={() => void onDisconnect()}
-              className="rounded-md border border-danger/40 px-3 py-1.5 text-danger hover:bg-background"
+              className="rounded-md border border-danger/40 px-3 py-1.5 text-danger transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-background"
             >
               Disconnect
             </button>
           </div>
         </div>
-      ) : (
-        <p className="text-sm text-ink-muted">
-          No mailbox connected yet. Use a Gmail app password or any IMAP host
-          that receives mail from{" "}
-          <span className="font-mono">qris-transaction@banksinarmas.com</span>.
-        </p>
-      )}
+      ) : null}
 
       <form
         onSubmit={onSave}
@@ -199,6 +193,7 @@ export function ImapSettingsForm() {
             id="username"
             name="username"
             required
+            placeholder="you@gmail.com"
             defaultValue={connection?.username ?? ""}
             className="w-full rounded-md border border-line bg-background px-3 py-2"
           />
@@ -221,7 +216,7 @@ export function ImapSettingsForm() {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-accent px-4 py-2 font-medium text-white hover:bg-accent-dark disabled:opacity-60"
+          className="rounded-md bg-accent px-4 py-2 font-medium text-white transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-accent-dark disabled:opacity-60"
         >
           {pending ? "Saving…" : "Save IMAP settings"}
         </button>

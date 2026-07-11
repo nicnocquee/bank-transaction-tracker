@@ -3,7 +3,7 @@ import path from "node:path";
 
 const evidenceDir = path.join(process.cwd(), "evidence");
 
-test.describe("Sinarmas expense tracker e2e", () => {
+test.describe("Bank transaction tracker e2e", () => {
   test("register → IMAP settings → fixture sync → see expense", async ({
     page,
   }) => {
@@ -26,6 +26,25 @@ test.describe("Sinarmas expense tracker e2e", () => {
     await expect(
       page.getByRole("heading", { name: "IMAP settings" }),
     ).toBeVisible();
+    await expect(
+      page.getByText("Bank Transaction Tracker").first(),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Need help finding these values?"),
+    ).toBeVisible();
+    await expect(page.getByText("Enable")).toBeHidden();
+    await page.screenshot({
+      path: path.join(evidenceDir, "browser-imap-settings.png"),
+      fullPage: true,
+    });
+
+    await page.getByText("Need help finding these values?").click();
+    await expect(page.getByRole("heading", { name: "Gmail" })).toBeVisible();
+    await page.screenshot({
+      path: path.join(evidenceDir, "browser-imap-help-expanded.png"),
+      fullPage: true,
+    });
+
     await page.getByLabel("IMAP host").fill("imap.example.com");
     await page.getByLabel("Username").fill(email);
     await page.getByLabel(/Password \/ app password/).fill("app-password");
@@ -34,7 +53,7 @@ test.describe("Sinarmas expense tracker e2e", () => {
       timeout: 10_000,
     });
     await page.screenshot({
-      path: path.join(evidenceDir, "browser-imap-settings.png"),
+      path: path.join(evidenceDir, "browser-imap-saved.png"),
       fullPage: true,
     });
 

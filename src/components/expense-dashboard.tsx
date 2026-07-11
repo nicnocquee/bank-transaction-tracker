@@ -105,7 +105,7 @@ export function ExpenseDashboard({
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Expenses</h1>
           <p className="mt-1 text-ink-muted">
-            Bank Sinarmas QRIS & transfers for {monthLabel}
+            Imported bank receipts for {monthLabel}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -149,7 +149,7 @@ export function ExpenseDashboard({
 
       {!hasImap && process.env.NEXT_PUBLIC_ALLOW_FIXTURE_SYNC !== "1" ? (
         <p className="rounded-lg border border-line bg-panel p-4 text-sm text-ink-muted">
-          Connect your mailbox under IMAP settings to import Sinarmas receipts.
+          Connect your mailbox under IMAP settings to import bank receipts.
         </p>
       ) : null}
 

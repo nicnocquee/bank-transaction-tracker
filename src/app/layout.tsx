@@ -15,9 +15,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sinarmas Expense Tracker",
+  title: "Bank Transaction Tracker",
   description:
-    "Track Bank Sinarmas QRIS and transfer expenses from email receipts",
+    "Track bank expenses from receipt emails — starting with Bank Sinarmas QRIS and transfers",
 };
 
 export default function RootLayout({

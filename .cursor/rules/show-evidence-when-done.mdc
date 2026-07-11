@@ -1,0 +1,24 @@
+---
+description: Always show evidence (screenshots, logs, test output) when claiming work is done
+alwaysApply: true
+---
+
+# Show Evidence When Claiming Done
+
+When you claim that work is finished, fixed, verified, or passing, **always surface the evidence in the same response**. Do not only say where evidence lives — show it.
+
+## Required
+
+- **UI / UX changes:** Embed or link the relevant screenshot(s) from `evidence/` (or freshly captured paths). Prefer reading image files so they render in chat.
+- **Tests / gates:** Quote the pass line(s) or attach the log file path **and** include the key result (e.g. `1 passed`, coverage %).
+- **Multiple claims:** Match each claim to its evidence (rename → header screenshot; IMAP help → collapsed + expanded shots; etc.).
+
+## Do not
+
+- Say “done” / “fixed” / “passing” with only a prose description and no artifact.
+- Point at stale evidence from before the change.
+- Assume the user will open `evidence/` on their own.
+
+## Refresh
+
+If existing screenshots or logs predate the change, re-run the relevant check and overwrite/update evidence before claiming success.

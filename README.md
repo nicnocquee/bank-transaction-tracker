@@ -1,6 +1,8 @@
-# Sinarmas Expense Tracker
+# Bank Transaction Tracker
 
-Multi-user app that imports Bank Sinarmas QRIS/transfer receipts from email (`qris-transaction@banksinarmas.com`) over IMAP and shows monthly expenses.
+Multi-user app that imports bank payment receipts from email over IMAP and shows monthly expenses.
+
+**Currently supported:** Bank Sinarmas QRIS/transfer emails from `qris-transaction@banksinarmas.com`. The product is bank-agnostic so additional banks can be added later.
 
 ## Stack
 
@@ -22,7 +24,16 @@ npx prisma migrate dev
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), register, connect IMAP (e.g. Gmail app password), then **Sync now**.
+Open [http://localhost:3000](http://localhost:3000), register, connect IMAP, then **Sync now**.
+
+### IMAP settings (Gmail)
+
+1. Enable [2-Step Verification](https://myaccount.google.com/security).
+2. Create an [App password](https://myaccount.google.com/apppasswords).
+3. In the app: host `imap.gmail.com`, port `993`, TLS on, username = your Gmail, password = the app password.
+4. Save → Test connection → Expenses → Sync now.
+
+The in-app **IMAP settings** page has the full field guide for Gmail, Outlook, and other providers.
 
 ## Scripts
 
