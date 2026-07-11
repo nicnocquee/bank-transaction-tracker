@@ -20,9 +20,24 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-/** Shared Prisma client for the Next.js server runtime. */
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+/**
+ * Returns the shared Prisma client, creating it on first use.
+ * Lazy init avoids requiring DATABASE_URL at import time (e.g. unit tests).
+ * @returns Shared PrismaClient instance.
+ */
+export function getPrisma(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+  return globalForPrisma.prisma;
 }
+
+/**
+ * Shared Prisma client for the Next.js server runtime.
+ * Delegates to {@link getPrisma} so modules can import without a live DB.
+ */
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, property, receiver) {
+    return Reflect.get(getPrisma() as object, property, receiver);
+  },
+});
