@@ -1,0 +1,27 @@
+
+> bank-transaction-tracker@0.1.0 test:coverage
+> vitest run --coverage
+
+◇ injected env (8) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+ RUN  v4.1.10 /Users/nico/Projects/personal/bank-transaction-tracker
+      Coverage enabled with v8
+
+
+ Test Files  11 passed (11)
+      Tests  66 passed (66)
+   Start at  13:55:00
+   Duration  1.60s (transform 638ms, setup 0ms, import 1.31s, tests 1.44s, environment 1ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 146/146 )
+Branches     : 100% ( 100/100 )
+Functions    : 100% ( 20/20 )
+Lines        : 100% ( 145/145 )
+================================================================================

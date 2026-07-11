@@ -13,8 +13,9 @@ export default auth((request) => {
   const isPublic = pathname === "/login" || pathname === "/register";
   const isAuthApi =
     pathname.startsWith("/api/auth") || pathname.startsWith("/api/register");
+  const isCronApi = pathname.startsWith("/api/cron");
 
-  if (pathname.startsWith("/api/") && !isAuthApi && !isLoggedIn) {
+  if (pathname.startsWith("/api/") && !isAuthApi && !isCronApi && !isLoggedIn) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

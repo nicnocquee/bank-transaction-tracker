@@ -14,9 +14,12 @@ export default defineConfig({
         "src/lib/parsers/sinarmas-parser.ts",
         "src/lib/crypto/secret-box.ts",
         "src/lib/email/imap-sync.ts",
+        "src/lib/email/sync-all-users.ts",
         "src/lib/auth/password.ts",
+        "src/lib/auth/cron-secret.ts",
         "src/lib/transactions/persist-transaction.ts",
         "src/lib/format/money.ts",
+        "src/lib/format/period.ts",
       ],
       exclude: ["**/*.test.ts", "**/sinarmas-fixtures.ts"],
       thresholds: {

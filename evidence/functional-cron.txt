@@ -1,0 +1,10 @@
+◇ injected env (8) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+ RUN  v4.1.10 /Users/nico/Projects/personal/bank-transaction-tracker
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  13:55:02
+   Duration  127ms (transform 21ms, setup 0ms, import 50ms, tests 5ms, environment 0ms)
+

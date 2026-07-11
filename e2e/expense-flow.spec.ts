@@ -17,6 +17,10 @@ test.describe("Bank transaction tracker e2e", () => {
     await expect(page.getByRole("heading", { name: "Expenses" })).toBeVisible({
       timeout: 15_000,
     });
+    await expect(
+      page.getByText(/New emails are checked every 5 minutes/i),
+    ).toBeVisible();
+    await expect(page.getByText(/\bcron\b/i)).toHaveCount(0);
     await page.screenshot({
       path: path.join(evidenceDir, "browser-dashboard-empty.png"),
       fullPage: true,
@@ -58,8 +62,7 @@ test.describe("Bank transaction tracker e2e", () => {
     });
 
     await page.getByRole("link", { name: "Expenses" }).click();
-    await page.getByLabel("Year").fill("2026");
-    await page.locator("#month").selectOption("7");
+    await page.getByLabel("Period").fill("2026-07");
     await page.getByRole("button", { name: "Sync now" }).click();
     await expect(page.getByText(/FIESTA STEAK/i)).toBeVisible({
       timeout: 15_000,

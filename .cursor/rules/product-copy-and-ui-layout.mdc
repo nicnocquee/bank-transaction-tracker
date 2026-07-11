@@ -1,0 +1,24 @@
+---
+description: User-facing copy and UI layout standards — no jargon, clear toolbars
+alwaysApply: true
+---
+
+# Product Copy & UI Layout
+
+## Copywriting
+
+- Write for a non-technical user. Never put infrastructure jargon in the UI (`cron`, IMAP internals, OAuth, webhook, bearer token, etc.) unless the screen is explicitly for developers.
+- Prefer plain outcomes: “checks for new emails every 5 minutes”, not “server cron”.
+- Keep supporting sentences short. One idea per line under a heading.
+- Apply the humanizer skill for narrative UI copy: no promotional filler, no AI vocabulary.
+
+## Toolbar / filter layouts
+
+- Keep related controls in **one horizontal group** on desktop (filter + primary action). Do not wrap the primary action under only part of the filter cluster.
+- Align controls on a shared baseline (`items-end` or equal-height inputs).
+- On small screens, stack as: filters row, then full-width action — not a broken L-shape.
+- Prefer a single `month` control (e.g. `<input type="month">`) over separate month + year fields when both only select a period.
+
+## When claiming UI/copy done
+
+Show a fresh screenshot of the affected screen in the same reply.

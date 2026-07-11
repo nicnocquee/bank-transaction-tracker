@@ -1,0 +1,7 @@
+
+> bank-transaction-tracker@0.1.0 cron:worker
+> tsx scripts/cron-worker.ts
+
+[cron] scheduling IMAP sync with "*/5 * * * *"
+[cron] sync starting at 2026-07-11T06:55:17.687Z
+[cron] sync finished attempted=9 ok=0 failed=9

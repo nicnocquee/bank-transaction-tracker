@@ -24,7 +24,23 @@ npx prisma migrate dev
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), register, connect IMAP, then **Sync now**.
+Open [http://localhost:3000](http://localhost:3000), register, connect IMAP, then **Sync now** (optional — auto-sync also runs on a schedule).
+
+### Automatic sync (server cron)
+
+Keep the Next.js app running, then in a second terminal:
+
+```bash
+npm run cron:worker
+```
+
+By default this syncs **every 5 minutes** for every user with IMAP enabled (`CRON_SCHEDULE`, override in `.env`).
+
+You can also hit the HTTP endpoint from any external scheduler (system cron, GitHub Actions, etc.):
+
+```bash
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sync
+```
 
 ### IMAP settings (Gmail)
 
@@ -37,12 +53,13 @@ The in-app **IMAP settings** page has the full field guide for Gmail, Outlook, a
 
 ## Scripts
 
-| Script                  | Purpose                                       |
-| ----------------------- | --------------------------------------------- |
-| `npm run test`          | Unit + functional tests                       |
-| `npm run test:coverage` | Coverage (100% on parser/crypto/sync helpers) |
-| `npm run test:e2e`      | Playwright browser flow                       |
-| `npm run db:up`         | Start Postgres via Docker Compose             |
+| Script                  | Purpose                                               |
+| ----------------------- | ----------------------------------------------------- |
+| `npm run test`          | Unit + functional tests                               |
+| `npm run test:coverage` | Coverage (100% on parser/crypto/sync helpers)         |
+| `npm run test:e2e`      | Playwright browser flow                               |
+| `npm run cron:worker`   | Background IMAP sync for all users (default every 5m) |
+| `npm run db:up`         | Start Postgres via Docker Compose                     |
 
 ## Security notes
 

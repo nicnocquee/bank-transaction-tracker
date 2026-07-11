@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatIdr, formatTransactionDate } from "@/lib/format/money";
+import { fromMonthValue, toMonthValue } from "@/lib/format/period";
 
 type Transaction = {
   id: string;
@@ -99,40 +100,45 @@ export function ExpenseDashboard({
     }
   }
 
+  /**
+   * Updates the selected month from the period picker.
+   */
+  function onPeriodChange(value: string) {
+    const parsed = fromMonthValue(value);
+    if (!parsed) {
+      return;
+    }
+    setYear(parsed.year);
+    setMonth(parsed.month);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0 sm:max-w-xl">
           <h1 className="text-3xl font-semibold tracking-tight">Expenses</h1>
           <p className="mt-1 text-ink-muted">
-            Imported bank receipts for {monthLabel}
+            Bank receipts for {monthLabel}. New emails are checked every 5
+            minutes — or refresh now.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="sr-only" htmlFor="month">
-            Month
-          </label>
-          <select
-            id="month"
-            value={month}
-            onChange={(event) => setMonth(Number(event.target.value))}
-            className="rounded-md border border-line bg-panel px-3 py-2"
-          >
-            {Array.from({ length: 12 }, (_, index) => (
-              <option key={index + 1} value={index + 1}>
-                {new Date(2000, index, 1).toLocaleString("en-US", {
-                  month: "long",
-                })}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={year}
-            onChange={(event) => setYear(Number(event.target.value))}
-            className="w-24 rounded-md border border-line bg-panel px-3 py-2"
-            aria-label="Year"
-          />
+
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-end">
+          <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-initial">
+            <label
+              className="text-xs font-medium text-ink-muted"
+              htmlFor="period"
+            >
+              Period
+            </label>
+            <input
+              id="period"
+              type="month"
+              value={toMonthValue(year, month)}
+              onChange={(event) => onPeriodChange(event.target.value)}
+              className="h-10 w-full rounded-md border border-line bg-panel px-3 sm:w-44"
+            />
+          </div>
           <button
             type="button"
             disabled={
@@ -140,7 +146,7 @@ export function ExpenseDashboard({
               (!hasImap && process.env.NEXT_PUBLIC_ALLOW_FIXTURE_SYNC !== "1")
             }
             onClick={() => void onSync()}
-            className="rounded-md bg-accent px-4 py-2 font-medium text-white hover:bg-accent-dark disabled:opacity-50"
+            className="h-10 shrink-0 rounded-md bg-accent px-4 font-medium text-white transition-transform duration-150 ease-out active:scale-[0.97] hover:bg-accent-dark disabled:opacity-50"
           >
             {pending ? "Syncing…" : "Sync now"}
           </button>
