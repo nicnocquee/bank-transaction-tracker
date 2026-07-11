@@ -1,0 +1,44 @@
+---
+description: Run available agents as a team in a build-test loop until browser, functional, unit, and pen-test gates all pass with evidence
+alwaysApply: true
+---
+
+# Agent Team Quality Loop
+
+When implementing or fixing product work, treat available agents as a team and **loop until every applicable gate passes**. Do not stop at “code looks done.”
+
+## Team
+
+Use relevant Task subagents in parallel when the work spans their domains (e.g. Frontend Developer + Backend Architect + Evidence Collector + Reality Checker). Prefer the Agents Orchestrator for multi-step delivery. Do not invent agents that are not available.
+
+## Loop
+
+1. **Build** — implement the change with the right specialists.
+2. **Gate** — run every applicable check below.
+3. **Fix** — any failure returns to build; do not declare done.
+4. **Evidence** — surface fresh proof for each passing gate (see `show-evidence-when-done`).
+
+## Gates (where applicable)
+
+| Gate           | When it applies                                              | Evidence                                                  |
+| -------------- | ------------------------------------------------------------ | --------------------------------------------------------- |
+| **Unit**       | Logic, parsers, helpers, API handlers                        | Test run output with pass count / coverage                |
+| **Functional** | User-facing flows, APIs, integrations                        | Scripted or manual flow result; API/status proof          |
+| **Browser**    | UI / UX changes                                              | Fresh screenshot(s) in `evidence/` of the affected screen |
+| **Pen-test**   | Auth, input handling, secrets, network, privilege boundaries | Short findings note or “no issues” with what was probed   |
+
+Skip a gate only when it clearly does not apply (e.g. no UI → skip browser). Say which gates ran and which were skipped and why.
+
+## Done means
+
+- Every applicable gate passed in this session (not stale prior runs).
+- Evidence for each gate is shown in the same reply that claims done.
+- Reality Checker / Evidence Collector used when the change is substantial enough to warrant a second pair of eyes.
+
+```
+❌ BAD — ship after unit tests only
+“Tests pass, done.” (no browser shot, no functional check)
+
+✅ GOOD — full loop
+Unit: `n passed` quoted → Functional: flow verified → Browser: evidence/*.png shown → Pen-test: auth/input checked or N/A with reason
+```
