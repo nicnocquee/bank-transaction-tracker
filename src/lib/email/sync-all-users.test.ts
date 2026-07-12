@@ -55,6 +55,8 @@ describe("syncAllEnabledUsers", () => {
       created: 1,
       skipped: 0,
       errors: [],
+      mailbox: "INBOX",
+      truncated: false,
     }));
 
     // Act
@@ -105,7 +107,14 @@ describe("syncAllEnabledUsers", () => {
       if (userId === "bad") {
         throw new Error("imap down");
       }
-      return { fetched: 0, created: 0, skipped: 0, errors: [] };
+      return {
+        fetched: 0,
+        created: 0,
+        skipped: 0,
+        errors: [],
+        mailbox: "INBOX",
+        truncated: false,
+      };
     });
 
     // Act
