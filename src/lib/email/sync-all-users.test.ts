@@ -3,20 +3,9 @@ import {
   syncAllEnabledUsers,
   type EnabledImapConnection,
   type ImapConnectionLoader,
+  type SyncUserFn,
 } from "./sync-all-users";
 import type { TransactionStore } from "@/lib/transactions/persist-transaction";
-import type {
-  ImapClient,
-  ImapConnectionConfig,
-  SyncResult,
-} from "./imap-sync";
-
-type SyncUserFn = (
-  userId: string,
-  config: ImapConnectionConfig,
-  store: TransactionStore,
-  createClient?: (config: ImapConnectionConfig) => ImapClient,
-) => Promise<SyncResult>;
 
 describe("syncAllEnabledUsers", () => {
   afterEach(() => {
@@ -189,7 +178,118 @@ describe("syncAllEnabledUsers", () => {
       usersAttempted: 0,
       usersSucceeded: 0,
       usersFailed: 0,
+      stoppedEarly: false,
       outcomes: [],
     });
+  });
+
+  it("stops starting new users once the deadline is reached", async () => {
+    // Setup
+    let now = 1_000;
+    const connections: EnabledImapConnection[] = [
+      {
+        userId: "u1",
+        host: "h",
+        port: 993,
+        username: "a",
+        passwordEncrypted: "a",
+        tls: true,
+      },
+      {
+        userId: "u2",
+        host: "h",
+        port: 993,
+        username: "b",
+        passwordEncrypted: "b",
+        tls: true,
+      },
+    ];
+    const loader: ImapConnectionLoader = {
+      listEnabled: async () => connections,
+    };
+    const store: TransactionStore = {
+      upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
+      markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
+    };
+    const syncUser = vi.fn<SyncUserFn>(async () => {
+      now = 5_000;
+      return {
+        fetched: 0,
+        created: 0,
+        skipped: 0,
+        errors: [],
+        mailbox: "INBOX",
+        truncated: false,
+      };
+    });
+
+    // Act
+    const result = await syncAllEnabledUsers(
+      loader,
+      store,
+      () => "secret",
+      syncUser,
+      undefined,
+      { endsAt: 2_000, now: () => now },
+    );
+
+    // Assert
+    expect(syncUser).toHaveBeenCalledTimes(1);
+    expect(result.usersAttempted).toBe(1);
+    expect(result.stoppedEarly).toBe(true);
+  });
+
+  it("marks stoppedEarly when a user sync hits the deadline", async () => {
+    // Setup
+    const loader: ImapConnectionLoader = {
+      listEnabled: async () => [
+        {
+          userId: "u1",
+          host: "h",
+          port: 993,
+          username: "a",
+          passwordEncrypted: "a",
+          tls: true,
+        },
+        {
+          userId: "u2",
+          host: "h",
+          port: 993,
+          username: "b",
+          passwordEncrypted: "b",
+          tls: true,
+        },
+      ],
+    };
+    const store: TransactionStore = {
+      upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
+      markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
+    };
+    const syncUser = vi.fn<SyncUserFn>(async () => ({
+      fetched: 2,
+      created: 1,
+      skipped: 0,
+      errors: [],
+      mailbox: "INBOX",
+      truncated: true,
+      deadlineReached: true,
+    }));
+
+    // Act
+    const result = await syncAllEnabledUsers(
+      loader,
+      store,
+      () => "secret",
+      syncUser,
+      undefined,
+      { endsAt: Date.now() + 60_000 },
+    );
+
+    // Assert
+    expect(syncUser).toHaveBeenCalledTimes(1);
+    expect(result.stoppedEarly).toBe(true);
+    expect(result.usersSucceeded).toBe(1);
   });
 });

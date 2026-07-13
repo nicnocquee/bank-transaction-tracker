@@ -1,0 +1,10 @@
+◇ injected env (8) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+ RUN  v4.1.10 /Users/nico/Projects/personal/bank-transaction-tracker
+
+
+ Test Files  4 passed (4)
+      Tests  41 passed (41)
+   Start at  11:01:29
+   Duration  285ms (transform 200ms, setup 0ms, import 671ms, tests 42ms, environment 0ms)
+

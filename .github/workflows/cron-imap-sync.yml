@@ -26,9 +26,20 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           APP_URL: https://bank-transaction-tracker.netlify.app
         run: |
-          curl -fsS -X POST \
+          # Netlify serverless caps ~26–30s; the API stops early under that budget.
+          http_code="$(curl -sS -o /tmp/cron-sync-body.json -w "%{http_code}" \
+            --max-time 28 \
+            -X POST \
             -H "Authorization: Bearer ${CRON_SECRET}" \
-            "${APP_URL}/api/cron/sync"
+            -H "Accept: application/json" \
+            "${APP_URL}/api/cron/sync")"
+          echo "HTTP ${http_code}"
+          cat /tmp/cron-sync-body.json || true
+          echo
+          if [ "$http_code" != "200" ]; then
+            echo "Cron sync failed with HTTP ${http_code}" >&2
+            exit 1
+          fi
 
   sync-staging:
     if: github.event_name == 'schedule' || inputs.target == 'both' || inputs.target == 'staging'
@@ -39,6 +50,16 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           APP_URL: https://bank-transaction-tracker-staging.netlify.app
         run: |
-          curl -fsS -X POST \
+          http_code="$(curl -sS -o /tmp/cron-sync-body.json -w "%{http_code}" \
+            --max-time 28 \
+            -X POST \
             -H "Authorization: Bearer ${CRON_SECRET}" \
-            "${APP_URL}/api/cron/sync"
+            -H "Accept: application/json" \
+            "${APP_URL}/api/cron/sync")"
+          echo "HTTP ${http_code}"
+          cat /tmp/cron-sync-body.json || true
+          echo
+          if [ "$http_code" != "200" ]; then
+            echo "Cron sync failed with HTTP ${http_code}" >&2
+            exit 1
+          fi
