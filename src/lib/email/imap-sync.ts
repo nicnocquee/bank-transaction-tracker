@@ -122,15 +122,23 @@ export async function resolveSyncMailbox(
 }
 
 /**
- * Selects newest UIDs first and caps the batch for serverless runtimes.
+ * Selects newest UIDs first, skips already-imported source ids, and caps the
+ * batch for serverless runtimes so "Sync again" advances past imported mail.
  * @param uids - UIDs returned by IMAP SEARCH.
  * @param limit - Max messages to process (defaults to {@link SYNC_MESSAGE_LIMIT}).
+ * @param excludeSourceIds - Source message ids already stored for the user.
  */
 export function selectUidsForSync(
   uids: number[],
   limit: number = SYNC_MESSAGE_LIMIT,
+  excludeSourceIds: Iterable<string> = [],
 ): { selected: number[]; truncated: boolean } {
-  const sorted = [...uids].sort((a, b) => b - a);
+  const exclude = new Set(
+    [...excludeSourceIds].map((id) => id.trim()).filter(Boolean),
+  );
+  const sorted = [...uids]
+    .filter((uid) => !exclude.has(String(uid)))
+    .sort((a, b) => b - a);
   if (sorted.length <= limit) {
     return { selected: sorted, truncated: false };
   }
@@ -198,7 +206,12 @@ export async function syncSinarmasFromImap(
     const uids = Array.isArray(searchResult) ? searchResult : [];
     result.fetched = uids.length;
 
-    const { selected, truncated } = selectUidsForSync(uids, messageLimit);
+    const alreadySynced = await store.listSyncedSourceMessageIds(userId);
+    const { selected, truncated } = selectUidsForSync(
+      uids,
+      messageLimit,
+      alreadySynced,
+    );
     result.truncated = truncated;
 
     for (const uid of selected) {

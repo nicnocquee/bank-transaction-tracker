@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+ RUN  v4.1.10 /Users/nico/Projects/personal/bank-transaction-tracker
+      Coverage enabled with v8
+
+
+ Test Files  13 passed (13)
+      Tests  85 passed (85)
+   Start at  09:48:29
+   Duration  1.85s (transform 801ms, setup 0ms, import 1.46s, tests 1.76s, environment 1ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 182/182 )
+Branches     : 100% ( 123/123 )
+Functions    : 100% ( 30/30 )
+Lines        : 100% ( 180/180 )
+================================================================================
