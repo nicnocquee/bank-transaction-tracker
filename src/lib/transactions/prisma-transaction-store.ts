@@ -31,6 +31,18 @@ export function createPrismaTransactionStore(
         data: { lastSyncedAt: syncedAt },
       });
     },
+    async listSyncedSourceMessageIds(userId) {
+      const rows = await db.transaction.findMany({
+        where: {
+          userId,
+          sourceMessageId: { not: null },
+        },
+        select: { sourceMessageId: true },
+      });
+      return rows
+        .map((row) => row.sourceMessageId)
+        .filter((id): id is string => typeof id === "string" && id.length > 0);
+    },
   };
 }
 

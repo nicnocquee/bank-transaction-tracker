@@ -156,6 +156,14 @@ describe("imap-sync", () => {
       expect(full).toEqual({ selected: [3, 2, 1], truncated: false });
       expect(capped).toEqual({ selected: [4, 3], truncated: true });
     });
+
+    it("skips already-synced source ids so later batches advance", () => {
+      // Act
+      const next = selectUidsForSync([1, 2, 3, 4, 5], 2, ["5", "4"]);
+
+      // Assert
+      expect(next).toEqual({ selected: [3, 2], truncated: true });
+    });
   });
 
   describe("extractPlainTextFromSource", () => {
@@ -232,6 +240,7 @@ describe("imap-sync", () => {
           return { id: `tx-${parsed.transactionNumber}`, created };
         },
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const source = Buffer.from(
         `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
@@ -270,6 +279,7 @@ describe("imap-sync", () => {
       const store: TransactionStore = {
         upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const gmailConfig: ImapConnectionConfig = {
         ...config,
@@ -308,6 +318,7 @@ describe("imap-sync", () => {
       const store: TransactionStore = {
         upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const createClient = () => createFakeClient({ uids: false });
 
@@ -330,6 +341,7 @@ describe("imap-sync", () => {
       const store: TransactionStore = {
         upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const source = Buffer.from(
         `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
@@ -363,11 +375,52 @@ describe("imap-sync", () => {
       expect(result.truncated).toBe(true);
     });
 
+    it("advances past already-synced UIDs on the next capped batch", async () => {
+      // Setup
+      const fetchedOrder: number[] = [];
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
+        markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => ["3", "2"],
+      };
+      const source = Buffer.from(
+        `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
+      );
+      const createClient = (): ImapClient => {
+        const base = createFakeClient({
+          uids: [1, 2, 3],
+          sources: { 1: source, 2: source, 3: source },
+        });
+        return {
+          ...base,
+          fetchOne: async (uid, query, options) => {
+            fetchedOrder.push(uid);
+            return base.fetchOne(uid, query, options);
+          },
+        };
+      };
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        config,
+        store,
+        createClient,
+        2,
+      );
+
+      // Assert
+      expect(fetchedOrder).toEqual([1]);
+      expect(result.created).toBe(1);
+      expect(result.truncated).toBe(false);
+    });
+
     it("skips messages without a source or transaction number", async () => {
       // Setup
       const store: TransactionStore = {
         upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const createClient = () =>
         createFakeClient({
@@ -399,6 +452,7 @@ describe("imap-sync", () => {
           throw new Error("db down");
         },
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const source = Buffer.from(
         `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
@@ -423,6 +477,7 @@ describe("imap-sync", () => {
       const store: TransactionStore = {
         upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const incomplete = `ID Transaksi\nONLY-ID\n`;
       const source = Buffer.from(
@@ -451,6 +506,7 @@ describe("imap-sync", () => {
           throw "boom";
         },
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const source = Buffer.from(
         `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,

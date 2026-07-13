@@ -14,6 +14,7 @@ vi.mock("@/lib/transactions/prisma-transaction-store", () => ({
   createPrismaTransactionStore: vi.fn(() => ({
     upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
     markImapSynced: async () => undefined,
+    listSyncedSourceMessageIds: async () => [],
   })),
 }));
 

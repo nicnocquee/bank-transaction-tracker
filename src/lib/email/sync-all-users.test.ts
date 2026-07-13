@@ -49,6 +49,7 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
     const syncUser = vi.fn<SyncUserFn>(async () => ({
       fetched: 1,
@@ -102,6 +103,7 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
     const syncUser = vi.fn<SyncUserFn>(async (userId) => {
       if (userId === "bad") {
@@ -150,6 +152,7 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
 
     // Act
@@ -175,6 +178,7 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
 
     // Act
