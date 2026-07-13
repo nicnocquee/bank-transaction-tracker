@@ -50,6 +50,7 @@ describe("cron sync route", () => {
       usersAttempted: 1,
       usersSucceeded: 1,
       usersFailed: 0,
+      stoppedEarly: false,
       outcomes: [],
     });
 
@@ -68,6 +69,10 @@ describe("cron sync route", () => {
     expect(response.status).toBe(200);
     expect(body.summary.usersAttempted).toBe(1);
     expect(syncAllMock).toHaveBeenCalledOnce();
+    const deadline = syncAllMock.mock.calls[0]?.[5] as
+      | { endsAt: number }
+      | undefined;
+    expect(deadline?.endsAt).toBeGreaterThan(Date.now() - 1_000);
   });
 
   it("supports GET for simple cron pingers", async () => {
@@ -77,6 +82,7 @@ describe("cron sync route", () => {
       usersAttempted: 0,
       usersSucceeded: 0,
       usersFailed: 0,
+      stoppedEarly: false,
       outcomes: [],
     });
 

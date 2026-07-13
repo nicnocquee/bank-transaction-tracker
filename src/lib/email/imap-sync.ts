@@ -12,6 +12,24 @@ export const SINARMAS_FROM = "qris-transaction@banksinarmas.com";
 export const SYNC_MESSAGE_LIMIT = 50;
 
 /**
+ * Default wall-clock budget for Netlify `/api/cron/sync` (platform ~26–30s cap).
+ */
+export const CRON_SYNC_BUDGET_MS_DEFAULT = 18_000;
+
+/** IMAP connect/greeting/socket timeouts tuned for serverless runtimes. */
+export const IMAP_CONNECTION_TIMEOUT_MS = 10_000;
+export const IMAP_GREETING_TIMEOUT_MS = 8_000;
+export const IMAP_SOCKET_TIMEOUT_MS = 15_000;
+
+/**
+ * Optional wall-clock deadline so sync can stop cleanly before the host kills it.
+ */
+export type SyncDeadline = {
+  endsAt: number;
+  now?: () => number;
+};
+
+/**
  * Minimal mailbox list entry used when resolving the All Mail folder.
  */
 export type ImapMailboxListEntry = {
@@ -53,10 +71,36 @@ export type SyncResult = {
   errors: string[];
   mailbox: string;
   truncated: boolean;
+  deadlineReached?: boolean;
 };
 
 /**
+ * Returns true when the optional sync deadline has already passed.
+ * @param deadline - Optional wall-clock deadline.
+ */
+export function isSyncDeadlineReached(deadline?: SyncDeadline): boolean {
+  if (!deadline) {
+    return false;
+  }
+  const now = deadline.now ?? Date.now;
+  return now() >= deadline.endsAt;
+}
+
+/**
+ * Builds a sync deadline `budgetMs` milliseconds from now.
+ * @param budgetMs - How long sync may run before stopping early.
+ * @param now - Clock function (defaults to Date.now) for tests.
+ */
+export function createSyncDeadline(
+  budgetMs: number,
+  now: () => number = Date.now,
+): SyncDeadline {
+  return { endsAt: now() + budgetMs, now };
+}
+
+/**
  * Creates a production ImapFlow client for the given connection config.
+ * Uses short timeouts so a hung IMAP server cannot outlive serverless limits.
  * @param config - Host, credentials, and TLS settings.
  * @returns Connected-capable ImapFlow instance cast to {@link ImapClient}.
  */
@@ -71,6 +115,9 @@ export function createImapFlowClient(config: ImapConnectionConfig): ImapClient {
       pass: config.password,
     },
     logger: false,
+    connectionTimeout: IMAP_CONNECTION_TIMEOUT_MS,
+    greetingTimeout: IMAP_GREETING_TIMEOUT_MS,
+    socketTimeout: IMAP_SOCKET_TIMEOUT_MS,
   }) as unknown as ImapClient;
 }
 /* v8 ignore stop */
@@ -174,6 +221,7 @@ export async function extractPlainTextFromSource(
  * @param store - Transaction persistence collaborator.
  * @param createClient - Factory for IMAP clients (defaults to ImapFlow).
  * @param messageLimit - Optional per-run fetch cap (defaults to SYNC_MESSAGE_LIMIT).
+ * @param deadline - Optional wall-clock deadline for serverless hosts.
  * @returns Counts of fetched/created/skipped messages and error messages.
  */
 export async function syncSinarmasFromImap(
@@ -184,6 +232,7 @@ export async function syncSinarmasFromImap(
     config: ImapConnectionConfig,
   ) => ImapClient = createImapFlowClient,
   messageLimit: number = SYNC_MESSAGE_LIMIT,
+  deadline?: SyncDeadline,
 ): Promise<SyncResult> {
   const client = createClient(config);
   const result: SyncResult = {
@@ -197,6 +246,12 @@ export async function syncSinarmasFromImap(
 
   await client.connect();
   try {
+    if (isSyncDeadlineReached(deadline)) {
+      result.deadlineReached = true;
+      result.truncated = true;
+      return result;
+    }
+
     result.mailbox = await resolveSyncMailbox(client);
     await client.mailboxOpen(result.mailbox);
     const searchResult = await client.search(
@@ -205,6 +260,13 @@ export async function syncSinarmasFromImap(
     );
     const uids = Array.isArray(searchResult) ? searchResult : [];
     result.fetched = uids.length;
+
+    if (isSyncDeadlineReached(deadline)) {
+      result.deadlineReached = true;
+      result.truncated = true;
+      await store.markImapSynced(userId, new Date());
+      return result;
+    }
 
     const alreadySynced = await store.listSyncedSourceMessageIds(userId);
     const { selected, truncated } = selectUidsForSync(
@@ -215,6 +277,11 @@ export async function syncSinarmasFromImap(
     result.truncated = truncated;
 
     for (const uid of selected) {
+      if (isSyncDeadlineReached(deadline)) {
+        result.deadlineReached = true;
+        result.truncated = true;
+        break;
+      }
       try {
         const message = await client.fetchOne(
           uid,
