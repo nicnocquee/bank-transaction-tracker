@@ -1,0 +1,37 @@
+---
+description: Leave a clean git working tree when a task finishes
+alwaysApply: true
+---
+
+# Clean Git Status When Done
+
+After any task that touches the repo, **end with a clean `git status`** (no modified or untracked leftovers from your work). Do not leave the user to tidy up.
+
+## Before you stop
+
+1. Run `git status -sb`.
+2. Clear every path you introduced or dirtied unless the user asked to keep it dirty.
+
+## What to do with leftovers
+
+| Leftover | Action |
+| -------- | ------ |
+| Intended product/docs change | Commit only if the user asked (or the ship/PR flow requires it); otherwise leave it only while still actively working that change |
+| Empty or scratch `evidence/*`, temp scripts, `/tmp` copies in-repo | Delete |
+| Unrelated edits you bumped into | `git restore` / discard |
+| WIP the user may want later | `git stash push -u -m "wip: <short reason>"` and tell them the stash name |
+| Merged feature/promote branch checked out | Switch back to `main` (or `staging` if that was the working base) and delete the local merged branch when safe |
+
+## Do not
+
+- End on a merged throwaway branch with a dirty tree.
+- Leave empty evidence logs, aborted editor files, or half-applied patches.
+- "Park" unrelated `.cursor/` or skill edits in the working tree — stash or commit them on purpose.
+
+## Done means
+
+```
+git status -sb   # → clean on the intended branch (usually main)
+```
+
+If something must remain uncommitted, say so in one line and stash it — do not leave it as ambient dirt.
