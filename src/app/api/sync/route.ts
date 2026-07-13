@@ -24,19 +24,25 @@ export async function POST() {
     );
   }
 
-  const password = decryptSecret(connection.passwordEncrypted);
-  const store = createPrismaTransactionStore();
-  const result = await syncSinarmasFromImap(
-    session.user.id,
-    {
-      host: connection.host,
-      port: connection.port,
-      username: connection.username,
-      password,
-      tls: connection.tls,
-    },
-    store,
-  );
+  try {
+    const password = decryptSecret(connection.passwordEncrypted);
+    const store = createPrismaTransactionStore();
+    const result = await syncSinarmasFromImap(
+      session.user.id,
+      {
+        host: connection.host,
+        port: connection.port,
+        username: connection.username,
+        password,
+        tls: connection.tls,
+      },
+      store,
+    );
 
-  return NextResponse.json({ result });
+    return NextResponse.json({ result });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Sync failed unexpectedly";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

@@ -1,0 +1,110 @@
+=== IMAP live diagnosis ===
+from: qris-transaction@banksinarmas.com
+resolved mailbox: [Gmail]/All Mail
+INBOX + from:            262
+All Mail + from:         263
+All Mail + gmraw:        263
+cleared prior txns: 0
+=== Running fixed sync ===
+sync result: {
+  "fetched": 263,
+  "created": 50,
+  "skipped": 0,
+  "errors": [],
+  "mailbox": "[Gmail]/All Mail",
+  "truncated": true
+}
+stored total: 50
+sample: [
+  {
+    "id": "FT261949H5BS",
+    "date": "2026-07-12T08:58:17.000Z",
+    "amount": 158700,
+    "merchant": "ALFA_CI28_SUMMARECON BURG - Nomor referensi"
+  },
+  {
+    "id": "FT2619490PV7",
+    "date": "2026-07-12T08:39:30.000Z",
+    "amount": 165000,
+    "merchant": "PET LOFT SUMARECON BEKASI - 936004510000654699 BANK SYARIAH INDONESIA"
+  },
+  {
+    "id": "FT26194CT8GF",
+    "date": "2026-07-11T14:00:45.000Z",
+    "amount": 146650,
+    "merchant": "PT Tokopedia - 936008990000059400 DOKU"
+  },
+  {
+    "id": "FT26194Y66MQ",
+    "date": "2026-07-11T09:14:40.000Z",
+    "amount": 738200,
+    "merchant": "BUCCHERI SUMMARECON BEKAS - 936000080040166351 BANK MANDIRI"
+  },
+  {
+    "id": "FT261917R0C7",
+    "date": "2026-07-10T11:37:54.000Z",
+    "amount": 120000,
+    "merchant": "FIESTA STEAK SUMARECON 3 - 936000020119952686 BANK RAKYAT INDONESIA"
+  },
+  {
+    "id": "FT26191L51SL",
+    "date": "2026-07-10T02:12:57.000Z",
+    "amount": 329720,
+    "merchant": "PT Tokopedia - 936008990000059400 DOKU"
+  },
+  {
+    "id": "FT26190F2325",
+    "date": "2026-07-09T14:14:00.000Z",
+    "amount": 153900,
+    "merchant": "PT Tokopedia - 936008990000059400 DOKU"
+  },
+  {
+    "id": "FT261902BTRK",
+    "date": "2026-07-09T11:05:33.000Z",
+    "amount": 159000,
+    "merchant": "PT Supertype Teknologi Nu - 936008480000010005 Nomor referensi"
+  },
+  {
+    "id": "FT26190KJ790",
+    "date": "2026-07-09T05:18:27.000Z",
+    "amount": 909000,
+    "merchant": "SENTOSA PET SHOP - 936000143002593499 BANK CENTRAL ASIA"
+  },
+  {
+    "id": "FT26189T0H6G",
+    "date": "2026-07-08T10:48:12.000Z",
+    "amount": 360500,
+    "merchant": "MARCOS CHOPSHOP SMB - 936000143004485993 BANK CENTRAL ASIA"
+  },
+  {
+    "id": "FT261899DJLF",
+    "date": "2026-07-08T08:56:08.000Z",
+    "amount": 88000,
+    "merchant": "BAKMI GM RUKO SUMMARECON - 936000080040375034 BANK MANDIRI"
+  },
+  {
+    "id": "FT26187N5L60",
+    "date": "2026-07-06T08:25:00.000Z",
+    "amount": 200000,
+    "merchant": "WATCH COLLECTION-HO - 936000143000475444 BANK CENTRAL ASIA"
+  },
+  {
+    "id": "FT261874HJN0",
+    "date": "2026-07-06T00:35:44.000Z",
+    "amount": 99701,
+    "merchant": "PT Tokopedia - 936008990000059400 DOKU"
+  },
+  {
+    "id": "FT2618764WMV",
+    "date": "2026-07-05T14:56:40.000Z",
+    "amount": 56420,
+    "merchant": "PT Tokopedia - 936008990000059400 DOKU"
+  },
+  {
+    "id": "FT26187CF1VQ",
+    "date": "2026-07-05T14:35:23.000Z",
+    "amount": 110700,
+    "merchant": "PT Tokopedia - 936008990000059400 DOKU"
+  }
+]
+APP_LOGIN nico-live-sync@local.test ********

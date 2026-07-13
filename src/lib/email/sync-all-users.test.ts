@@ -5,7 +5,18 @@ import {
   type ImapConnectionLoader,
 } from "./sync-all-users";
 import type { TransactionStore } from "@/lib/transactions/persist-transaction";
-import type { SyncResult } from "./imap-sync";
+import type {
+  ImapClient,
+  ImapConnectionConfig,
+  SyncResult,
+} from "./imap-sync";
+
+type SyncUserFn = (
+  userId: string,
+  config: ImapConnectionConfig,
+  store: TransactionStore,
+  createClient?: (config: ImapConnectionConfig) => ImapClient,
+) => Promise<SyncResult>;
 
 describe("syncAllEnabledUsers", () => {
   afterEach(() => {
@@ -38,15 +49,16 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
-    const syncUser = vi.fn(
-      async (): Promise<SyncResult> => ({
-        fetched: 1,
-        created: 1,
-        skipped: 0,
-        errors: [],
-      }),
-    );
+    const syncUser = vi.fn<SyncUserFn>(async () => ({
+      fetched: 1,
+      created: 1,
+      skipped: 0,
+      errors: [],
+      mailbox: "INBOX",
+      truncated: false,
+    }));
 
     // Act
     const result = await syncAllEnabledUsers(
@@ -91,12 +103,20 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
-    const syncUser = vi.fn(async (userId: string): Promise<SyncResult> => {
+    const syncUser = vi.fn<SyncUserFn>(async (userId) => {
       if (userId === "bad") {
         throw new Error("imap down");
       }
-      return { fetched: 0, created: 0, skipped: 0, errors: [] };
+      return {
+        fetched: 0,
+        created: 0,
+        skipped: 0,
+        errors: [],
+        mailbox: "INBOX",
+        truncated: false,
+      };
     });
 
     // Act
@@ -132,6 +152,7 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
 
     // Act
@@ -157,6 +178,7 @@ describe("syncAllEnabledUsers", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
 
     // Act

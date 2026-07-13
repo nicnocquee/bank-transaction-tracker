@@ -1,6 +1,10 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import {
+  buildSinarmasSearchQuery,
   extractPlainTextFromSource,
+  isGmailHost,
+  resolveSyncMailbox,
+  selectUidsForSync,
   syncSinarmasFromImap,
   testImapConnection,
   type ImapClient,
@@ -21,9 +25,13 @@ const config: ImapConnectionConfig = {
  * Builds a fake IMAP client for deterministic sync tests.
  */
 function createFakeClient(options: {
-  uids?: number[];
+  uids?: number[] | false;
   sources?: Record<number, Buffer>;
   connectError?: Error;
+  mailboxes?: { path: string; specialUse?: string }[];
+  listError?: Error;
+  opened?: string[];
+  searchedQueries?: object[];
 }): ImapClient {
   return {
     connect: async () => {
@@ -32,8 +40,22 @@ function createFakeClient(options: {
       }
     },
     logout: async () => undefined,
-    mailboxOpen: async () => ({}),
-    search: async () => options.uids ?? [],
+    list: options.mailboxes
+      ? async () => {
+          if (options.listError) {
+            throw options.listError;
+          }
+          return options.mailboxes ?? [];
+        }
+      : undefined,
+    mailboxOpen: async (path) => {
+      options.opened?.push(path);
+      return {};
+    },
+    search: async (query) => {
+      options.searchedQueries?.push(query);
+      return options.uids ?? [];
+    },
     fetchOne: async (uid) => {
       const source = options.sources?.[uid];
       if (!source) {
@@ -47,6 +69,101 @@ function createFakeClient(options: {
 describe("imap-sync", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe("isGmailHost", () => {
+    it("detects gmail and googlemail hosts", () => {
+      // Act / Assert
+      expect(isGmailHost("imap.gmail.com")).toBe(true);
+      expect(isGmailHost("IMAP.Gmail.com")).toBe(true);
+      expect(isGmailHost("imap.googlemail.com")).toBe(true);
+      expect(isGmailHost("imap.example.com")).toBe(false);
+    });
+  });
+
+  describe("buildSinarmasSearchQuery", () => {
+    it("uses gmraw for Gmail and from for other hosts", () => {
+      // Act / Assert
+      expect(buildSinarmasSearchQuery("imap.gmail.com")).toEqual({
+        gmraw: "from:qris-transaction@banksinarmas.com",
+      });
+      expect(buildSinarmasSearchQuery("imap.example.com")).toEqual({
+        from: "qris-transaction@banksinarmas.com",
+      });
+    });
+  });
+
+  describe("resolveSyncMailbox", () => {
+    it("returns INBOX when list is unavailable", async () => {
+      // Act
+      const path = await resolveSyncMailbox({});
+
+      // Assert
+      expect(path).toBe("INBOX");
+    });
+
+    it("prefers the SPECIAL-USE All mailbox when listed", async () => {
+      // Setup
+      const client = createFakeClient({
+        mailboxes: [
+          { path: "INBOX" },
+          { path: "[Gmail]/All Mail", specialUse: "\\All" },
+        ],
+      });
+
+      // Act
+      const path = await resolveSyncMailbox(client);
+
+      // Assert
+      expect(path).toBe("[Gmail]/All Mail");
+    });
+
+    it("falls back to INBOX when list throws", async () => {
+      // Setup
+      const client = createFakeClient({
+        mailboxes: [{ path: "INBOX" }],
+        listError: new Error("list failed"),
+      });
+
+      // Act
+      const path = await resolveSyncMailbox(client);
+
+      // Assert
+      expect(path).toBe("INBOX");
+    });
+
+    it("falls back to INBOX when no All mailbox is listed", async () => {
+      // Setup
+      const client = createFakeClient({
+        mailboxes: [{ path: "INBOX" }, { path: "Archive" }],
+      });
+
+      // Act
+      const path = await resolveSyncMailbox(client);
+
+      // Assert
+      expect(path).toBe("INBOX");
+    });
+  });
+
+  describe("selectUidsForSync", () => {
+    it("returns newest UIDs first and marks truncation", () => {
+      // Act
+      const full = selectUidsForSync([1, 3, 2], 10);
+      const capped = selectUidsForSync([1, 2, 3, 4], 2);
+
+      // Assert
+      expect(full).toEqual({ selected: [3, 2, 1], truncated: false });
+      expect(capped).toEqual({ selected: [4, 3], truncated: true });
+    });
+
+    it("skips already-synced source ids so later batches advance", () => {
+      // Act
+      const next = selectUidsForSync([1, 2, 3, 4, 5], 2, ["5", "4"]);
+
+      // Assert
+      expect(next).toEqual({ selected: [3, 2], truncated: true });
+    });
   });
 
   describe("extractPlainTextFromSource", () => {
@@ -123,6 +240,7 @@ describe("imap-sync", () => {
           return { id: `tx-${parsed.transactionNumber}`, created };
         },
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const source = Buffer.from(
         `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
@@ -150,7 +268,151 @@ describe("imap-sync", () => {
       // Assert
       expect(first.fetched).toBe(2);
       expect(first.created).toBe(1);
+      expect(first.mailbox).toBe("INBOX");
       expect(second.created).toBe(0);
+    });
+
+    it("opens All Mail and uses Gmail raw search on Gmail hosts", async () => {
+      // Setup
+      const opened: string[] = [];
+      const searchedQueries: object[] = [];
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
+        markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
+      };
+      const gmailConfig: ImapConnectionConfig = {
+        ...config,
+        host: "imap.gmail.com",
+      };
+      const createClient = () =>
+        createFakeClient({
+          uids: [],
+          opened,
+          searchedQueries,
+          mailboxes: [
+            { path: "INBOX" },
+            { path: "[Gmail]/All Mail", specialUse: "\\All" },
+          ],
+        });
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        gmailConfig,
+        store,
+        createClient,
+      );
+
+      // Assert
+      expect(opened).toEqual(["[Gmail]/All Mail"]);
+      expect(searchedQueries).toEqual([
+        { gmraw: "from:qris-transaction@banksinarmas.com" },
+      ]);
+      expect(result.mailbox).toBe("[Gmail]/All Mail");
+      expect(result.fetched).toBe(0);
+    });
+
+    it("treats a false search result as zero matches", async () => {
+      // Setup
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
+        markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
+      };
+      const createClient = () => createFakeClient({ uids: false });
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        config,
+        store,
+        createClient,
+      );
+
+      // Assert
+      expect(result.fetched).toBe(0);
+      expect(result.created).toBe(0);
+    });
+
+    it("processes newest UIDs first and reports truncation", async () => {
+      // Setup
+      const fetchedOrder: number[] = [];
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
+        markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
+      };
+      const source = Buffer.from(
+        `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
+      );
+      const createClient = (): ImapClient => {
+        const base = createFakeClient({
+          uids: [1, 2, 3],
+          sources: { 1: source, 2: source, 3: source },
+        });
+        return {
+          ...base,
+          fetchOne: async (uid, query, options) => {
+            fetchedOrder.push(uid);
+            return base.fetchOne(uid, query, options);
+          },
+        };
+      };
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        config,
+        store,
+        createClient,
+        2,
+      );
+
+      // Assert
+      expect(fetchedOrder).toEqual([3, 2]);
+      expect(result.fetched).toBe(3);
+      expect(result.truncated).toBe(true);
+    });
+
+    it("advances past already-synced UIDs on the next capped batch", async () => {
+      // Setup
+      const fetchedOrder: number[] = [];
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
+        markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => ["3", "2"],
+      };
+      const source = Buffer.from(
+        `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
+      );
+      const createClient = (): ImapClient => {
+        const base = createFakeClient({
+          uids: [1, 2, 3],
+          sources: { 1: source, 2: source, 3: source },
+        });
+        return {
+          ...base,
+          fetchOne: async (uid, query, options) => {
+            fetchedOrder.push(uid);
+            return base.fetchOne(uid, query, options);
+          },
+        };
+      };
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        config,
+        store,
+        createClient,
+        2,
+      );
+
+      // Assert
+      expect(fetchedOrder).toEqual([1]);
+      expect(result.created).toBe(1);
+      expect(result.truncated).toBe(false);
     });
 
     it("skips messages without a source or transaction number", async () => {
@@ -158,6 +420,7 @@ describe("imap-sync", () => {
       const store: TransactionStore = {
         upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const createClient = () =>
         createFakeClient({
@@ -189,6 +452,7 @@ describe("imap-sync", () => {
           throw new Error("db down");
         },
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const source = Buffer.from(
         `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
@@ -213,6 +477,7 @@ describe("imap-sync", () => {
       const store: TransactionStore = {
         upsertSinarmasTransaction: async () => ({ id: "x", created: true }),
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const incomplete = `ID Transaksi\nONLY-ID\n`;
       const source = Buffer.from(
@@ -233,6 +498,7 @@ describe("imap-sync", () => {
       expect(result.created).toBe(0);
       expect(result.skipped).toBe(1);
     });
+
     it("records non-Error throws as a generic message", async () => {
       // Setup
       const store: TransactionStore = {
@@ -240,6 +506,7 @@ describe("imap-sync", () => {
           throw "boom";
         },
         markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
       };
       const source = Buffer.from(
         `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,

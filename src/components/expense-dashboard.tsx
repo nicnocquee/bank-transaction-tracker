@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatIdr, formatTransactionDate } from "@/lib/format/money";
 import { fromMonthValue, toMonthValue } from "@/lib/format/period";
@@ -85,13 +86,34 @@ export function ExpenseDashboard({
       return;
     }
     const json = (await response.json()) as {
-      result?: { created: number; fetched: number; skipped: number };
+      result?: {
+        created: number;
+        fetched: number;
+        skipped: number;
+        truncated?: boolean;
+        errors?: string[];
+      };
     };
-    setSyncMessage(
-      json.result
-        ? `Synced ${json.result.fetched} messages · ${json.result.created} new · ${json.result.skipped} skipped`
-        : "Sync complete",
-    );
+    if (!json.result) {
+      setSyncMessage("Sync complete");
+    } else {
+      const parts = [
+        `Synced ${json.result.fetched} messages`,
+        `${json.result.created} new`,
+        `${json.result.skipped} skipped`,
+      ];
+      let message = parts.join(" · ");
+      if (json.result.fetched === 0) {
+        message +=
+          ". No matching bank receipts found, including archived mail. We only import from qris-transaction@banksinarmas.com.";
+      } else if (json.result.truncated) {
+        message += ". More left to import — sync again.";
+      }
+      if (json.result.errors?.length) {
+        message += ` · ${json.result.errors[0]}`;
+      }
+      setSyncMessage(message);
+    }
     const refresh = await fetch(
       `/api/transactions?year=${year}&month=${month}`,
     );
@@ -155,7 +177,14 @@ export function ExpenseDashboard({
 
       {!hasImap && process.env.NEXT_PUBLIC_ALLOW_FIXTURE_SYNC !== "1" ? (
         <p className="rounded-lg border border-line bg-panel p-4 text-sm text-ink-muted">
-          Connect your mailbox under IMAP settings to import bank receipts.
+          Connect your mailbox under{" "}
+          <Link
+            href="/settings/imap"
+            className="text-accent underline underline-offset-2"
+          >
+            IMAP settings
+          </Link>{" "}
+          to import bank receipts.
         </p>
       ) : null}
 

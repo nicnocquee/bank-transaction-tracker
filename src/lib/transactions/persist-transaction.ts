@@ -11,6 +11,11 @@ export type TransactionStore = {
     rawSnippet?: string | null;
   }) => Promise<{ id: string; created: boolean }>;
   markImapSynced: (userId: string, syncedAt: Date) => Promise<void>;
+  /**
+   * Returns IMAP source message ids already stored for the user so sync can
+   * skip them and advance to the next batch.
+   */
+  listSyncedSourceMessageIds: (userId: string) => Promise<string[]>;
 };
 
 /**

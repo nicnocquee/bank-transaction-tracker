@@ -28,6 +28,7 @@ describe("persistParsedTransaction", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
 
     // Act
@@ -42,6 +43,7 @@ describe("persistParsedTransaction", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
 
     // Act
@@ -59,6 +61,7 @@ describe("persistParsedTransaction", () => {
     const store: TransactionStore = {
       upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
       markImapSynced: async () => undefined,
+      listSyncedSourceMessageIds: async () => [],
     };
 
     // Act
