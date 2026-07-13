@@ -1,0 +1,27 @@
+
+> bank-transaction-tracker@0.1.0 test:unit
+> vitest run --exclude 'src/lib/api/functional-api.test.ts' --exclude 'src/lib/api/route-handlers.test.ts' --coverage
+
+◇ injected env (8) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+ RUN  v4.1.10 /Users/nico/Projects/personal/bank-transaction-tracker
+      Coverage enabled with v8
+
+
+ Test Files  12 passed (12)
+      Tests  84 passed (84)
+   Start at  11:01:41
+   Duration  601ms (transform 702ms, setup 0ms, import 1.53s, tests 302ms, environment 1ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 218/218 )
+Branches     : 100% ( 150/150 )
+Functions    : 100% ( 33/33 )
+Lines        : 100% ( 216/216 )
+================================================================================

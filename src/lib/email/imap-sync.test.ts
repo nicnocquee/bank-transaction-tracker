@@ -1,8 +1,10 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import {
   buildSinarmasSearchQuery,
+  createSyncDeadline,
   extractPlainTextFromSource,
   isGmailHost,
+  isSyncDeadlineReached,
   resolveSyncMailbox,
   selectUidsForSync,
   syncSinarmasFromImap,
@@ -524,6 +526,121 @@ describe("imap-sync", () => {
 
       // Assert
       expect(result.errors).toContain("Unknown sync error");
+    });
+
+    it("stops fetching messages once the deadline is reached", async () => {
+      // Setup
+      let now = 0;
+      const fetchedUids: number[] = [];
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
+        markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
+      };
+      const source = Buffer.from(
+        `Content-Type: text/plain; charset=utf-8\r\n\r\n${SAMPLE_SINARMAS_EMAIL}`,
+      );
+      const base = createFakeClient({
+        uids: [3, 2, 1],
+        sources: { 1: source, 2: source, 3: source },
+      });
+      const createClient = (): ImapClient => ({
+        ...base,
+        fetchOne: async (uid, query, options) => {
+          fetchedUids.push(uid);
+          now = 100;
+          return base.fetchOne(uid, query, options);
+        },
+      });
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        config,
+        store,
+        createClient,
+        50,
+        { endsAt: 50, now: () => now },
+      );
+
+      // Assert
+      expect(fetchedUids).toEqual([3]);
+      expect(result.deadlineReached).toBe(true);
+      expect(result.truncated).toBe(true);
+    });
+
+    it("returns early when the deadline is already past after connect", async () => {
+      // Setup
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
+        markImapSynced: async () => undefined,
+        listSyncedSourceMessageIds: async () => [],
+      };
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        config,
+        store,
+        () => createFakeClient({ uids: [1] }),
+        50,
+        { endsAt: 0, now: () => 1 },
+      );
+
+      // Assert
+      expect(result.deadlineReached).toBe(true);
+      expect(result.truncated).toBe(true);
+      expect(result.fetched).toBe(0);
+    });
+
+    it("stops after search when the deadline elapses during mailbox setup", async () => {
+      // Setup
+      let now = 0;
+      let marked = false;
+      const store: TransactionStore = {
+        upsertSinarmasTransaction: async () => ({ id: "1", created: true }),
+        markImapSynced: async () => {
+          marked = true;
+        },
+        listSyncedSourceMessageIds: async () => [],
+      };
+      const base = createFakeClient({ uids: [1, 2] });
+      const createClient = (): ImapClient => ({
+        ...base,
+        mailboxOpen: async (path) => {
+          now = 100;
+          return base.mailboxOpen(path);
+        },
+      });
+
+      // Act
+      const result = await syncSinarmasFromImap(
+        "user-1",
+        config,
+        store,
+        createClient,
+        50,
+        { endsAt: 50, now: () => now },
+      );
+
+      // Assert
+      expect(result.deadlineReached).toBe(true);
+      expect(result.truncated).toBe(true);
+      expect(result.fetched).toBe(2);
+      expect(marked).toBe(true);
+    });
+  });
+
+  describe("sync deadline helpers", () => {
+    it("createSyncDeadline and isSyncDeadlineReached track wall clock", () => {
+      // Act
+      const deadline = createSyncDeadline(100, () => 1_000);
+
+      // Assert
+      expect(deadline.endsAt).toBe(1_100);
+      expect(isSyncDeadlineReached(undefined)).toBe(false);
+      expect(isSyncDeadlineReached({ endsAt: 50, now: () => 40 })).toBe(false);
+      expect(isSyncDeadlineReached({ endsAt: 50, now: () => 50 })).toBe(true);
     });
   });
 

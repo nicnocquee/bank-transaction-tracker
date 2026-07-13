@@ -15,6 +15,7 @@ export default defineConfig({
         "src/lib/crypto/secret-box.ts",
         "src/lib/email/imap-sync.ts",
         "src/lib/email/sync-all-users.ts",
+        "src/lib/email/resolve-cron-sync-budget.ts",
         "src/lib/auth/password.ts",
         "src/lib/auth/cron-secret.ts",
         "src/lib/transactions/persist-transaction.ts",
